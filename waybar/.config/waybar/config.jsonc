@@ -39,7 +39,7 @@
   "custom/vpn": {
       "format": "<span size='13000' foreground='#f5e0dc'>  vpn:{}</span>",
       "interval": 5,
-      "exec": "if nmcli -t -f NAME,STATE connection show --active | grep -q '^archer:activated'; then echo up; else echo down; fi",
-      "on-click": "bash -c 'if nmcli -t -f NAME,STATE connection show --active | grep -q \"^archer:activated\"; then nmcli connection down archer; else nmcli connection up archer; fi'"
+      "exec": "if nmcli -t -f NAME,STATE connection show --active | grep -q '^archer.v2:activated'; then echo up; else echo down; fi",
+      "on-click": "bash -c 'if nmcli -t -f NAME,STATE connection show --active | grep -q \"^archer.v2:activated\"; then nmcli connection down archer.v2; else nmcli connection up archer.v2; fi'"
   }
 }
