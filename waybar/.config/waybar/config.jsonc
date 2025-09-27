@@ -1,45 +1,155 @@
 {
+  "reload_style_on_change": true,
+  "layer": "top",
   "position": "top",
-  "modules-left": ["hyprland/workspaces"],
-  "modules-center": ["hyprland/window"],
-  "modules-right": ["custom/vpn", "network", "pulseaudio", "battery", "clock"],
-  "clock": {
-    "format": "<span foreground='#f5c2e7'>   </span>{:%a %d %H:%M}",
-    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+  "spacing": 0,
+  "modules-left": [
+    "custom/arch",
+    "hyprland/workspaces",
+    "cpu",
+    "custom/seperator",
+    "memory",
+    "custom/seperator",
+    "network#speed"
+  ],
+  "modules-center": [
+    "clock"
+  ],
+  "modules-right": [
+    "custom/vpn",
+    "custom/seperator",
+    "network",
+    "custom/seperator",
+    "pulseaudio",
+    "custom/seperator",
+    "battery"
+  ],
+  "custom/seperator": {
+    "format": "<span>|</span>"
   },
-  "battery": {
-    "states": {
-      "warning": 30,
-      "critical": 15
-    },
-    "format": "<span size='13000' foreground='#a6e3a1'>{icon} </span> {capacity}%",
-    "format-warning": "<span size='13000' foreground='#B1E3AD'>{icon} </span> {capacity}%",
-    "format-critical": "<span size='13000' foreground='#E38C8F'>{icon} </span> {capacity}%",
-    "format-charging": "<span size='13000' foreground='#B1E3AD'> </span>{capacity}%",
-    "format-plugged": "<span size='13000' foreground='#B1E3AD'> </span>{capacity}%",
-    "format-alt": "<span size='13000' foreground='#B1E3AD'>{icon} </span> {time}",
-    "format-full": "<span size='13000' foreground='#B1E3AD'> </span>{capacity}%",
-    "format-icons": ["", "", "", "", ""],
-    "tooltip-format": "{time}"
+  "custom/arch": {
+    "format": "<span font='omarchy'></span>"
+  },
+  "hyprland/workspaces": {
+    "persistent-workspaces": {
+      "*": 4
+    }
+  },
+  "cpu": {
+    "interval": 5,
+    "format": "<span color='#a6e3a1' font='Font Awesome 6 Free-Solid'></span>   {usage}%",
+    "on-click": "kitty btop"
+  },
+  "memory": {
+    "interval": 5,
+    "format": " <span color='#a6e3a1' font='Font Awesome 6 Free'>󰄫</span>  {percentage}%",
+    "on-click": "kitty btop",
+    "tooltip-format": "{used}/{total} GiB"
+  },
+  "clock": {
+    "format": "{:%H:%M / %h %d}",
+    "tooltip": true,
+    "tooltip-format": "<tt>{calendar}</tt>"
+  },
+  "network#speed": {
+    "interval": 1,
+    "format": "{ifname}%%",
+    "format-wifi": "<span color='#a6e3a1' >  </span>{bandwidthDownBytes} <span  color='#f38ba8'>  </span>{bandwidthUpBytes}",
+    "format-ethernet": "{bandwidthDownBytes}  {bandwidthUpBytes}",
+    "format-disconnected": "󰌙",
+    "tooltip-format": "{ipaddr}",
+    "format-linked": "󰈁 {ifname} (No IP)",
+    "tooltip-format-wifi": "{essid}  {icon}   {signalStrength}%",
+    "tooltip-format-ethernet": "{ifname} 󰌘",
+    "tooltip-format-disconnected": "󰌙 Disconnected",
+    "max-length": 22,
+    "min-length": 18,
+    "format-icons": [
+      "󰤯",
+      "󰤟",
+      "󰤢",
+      "󰤥",
+      "󰤨"
+    ]
   },
   "network": {
-    "format-wifi": "<span size='13000' foreground='#f5e0dc'>  </span>{essid}",
-    "format-ethernet": "<span size='13000' foreground='#f5e0dc'>󰈀 </span>Ethernet",
-    "format-linked": "{ifname} (No IP) ",
-    "format-disconnected": "<span size='13000' foreground='#f5e0dc'>  </span>Disconnected",
-    "tooltip-format-wifi": "Signal Strenght: {signalStrength}%"
+    "format-icons": [
+      "󰤯",
+      "󰤟",
+      "󰤢",
+      "󰤥",
+      "󰤨"
+    ],
+    "format": "{icon}",
+    "format-wifi": "{icon}",
+    "format-ethernet": "󰀂",
+    "format-disconnected": "󰤮",
+    "tooltip-format-wifi": "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+    "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+    "tooltip-format-disconnected": "Disconnected",
+    "interval": 3,
+    "spacing": 1
+  },
+  "battery": {
+    "format": "{icon} {capacity}%",
+    "format-plugged": "",
+    "format-icons": {
+      "charging": [
+        "󰢜 ",
+        "󰂆 ",
+        "󰂇 ",
+        "󰂈 ",
+        "󰢝 ",
+        "󰂉 ",
+        "󰢞 ",
+        "󰂊 ",
+        "󰂋 ",
+        "󰂅 "
+      ],
+      "default": [
+        "󰁺",
+        "󰁻",
+        "󰁼",
+        "󰁽",
+        "󰁾",
+        "󰁿",
+        "󰂀",
+        "󰂁",
+        "󰂂",
+        "󰁹"
+      ]
+    },
+    "format-full": "󰂅 ",
+    "format-alt": "{icon} ",
+    "tooltip-format-discharging": "{power:>1.0f}W↓ {capacity}%",
+    "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
+    "interval": 5,
+    "states": {
+      "good": 95,
+      "warning": 30,
+      "critical": 15
+    }
   },
   "pulseaudio": {
-      "format": "{icon}  {volume}%",
-      "format-muted": "",
-      "format-icons": {
-          "default": ["", "", " "]
-      }
+    "format": "{icon}",
+    "tooltip-format": "Playing at {volume}%",
+    "scroll-step": 5,
+    "format-muted": "",
+    "format-icons": {
+      "default": [
+        "",
+        "",
+        ""
+      ]
+    },
+    "on-click": "pavucontrol"
   },
   "custom/vpn": {
-      "format": "<span size='13000' foreground='#f5e0dc'>  vpn:{}</span>",
-      "interval": 5,
-      "exec": "if nmcli -t -f NAME,STATE connection show --active | grep -q '^archer.v2:activated'; then echo up; else echo down; fi",
-      "on-click": "bash -c 'if nmcli -t -f NAME,STATE connection show --active | grep -q \"^archer.v2:activated\"; then nmcli connection down archer.v2; else nmcli connection up archer.v2; fi'"
+    "format": "{}",
+    "tooltip-format": "VPN: archer.v2",
+    "interval": 5,
+    "exec": "if nmcli -t -f NAME,STATE connection show --active | grep -q '^archer.v2:activated'; then echo '{\"text\":\"󰦝\",\"class\":\"running\"}'; else echo '{\"text\":\"󰞉\",\"class\":\"stopped\"}'; fi",
+    "return-type": "json",
+    "on-click": "bash -c 'if nmcli -t -f NAME,STATE connection show --active | grep -q \"^archer.v2:activated\"; then nmcli connection down archer.v2; else nmcli connection up archer.v2; fi'"
   }
 }
