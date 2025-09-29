@@ -38,8 +38,10 @@ tooltip {
     font-weight: 900;
 }
 
-#workspaces button.empty {
-    background: @lavender;
+#workspaces button.urgent,
+#workspaces button.urgent label {
+    background: @maroon;
+    color: @yellow;
 }
 
 #clock {
