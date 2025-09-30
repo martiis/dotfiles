@@ -72,6 +72,7 @@ tooltip {
 }
 
 #custom-vpn,
+#custom-power,
 #network,
 #pulseaudio,
 #battery {
@@ -86,6 +87,7 @@ tooltip {
 }
 
 #custom-vpn,
+#custom-power,
 #network,
 #pulseaudio {
     margin: 0 7px 0 2px;
@@ -98,4 +100,12 @@ tooltip {
 
 #custom-vpn.running {
     color: @green;
+}
+
+#custom-power.performance {
+  color: @red;
+}
+
+#custom-power.balanced {
+  color: @yellow;
 }

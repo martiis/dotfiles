@@ -18,6 +18,8 @@
   "modules-right": [
     "custom/vpn",
     "custom/seperator",
+    "custom/power",
+    "custom/seperator",
     "network",
     "custom/seperator",
     "pulseaudio",
@@ -143,6 +145,12 @@
       ]
     },
     "on-click": "pavucontrol"
+  },
+  "custom/power": {
+    "return-type": "json",
+    "interval": 5,
+    "exec": "sh -c 'current=$(powerprofilesctl get); if [ \"$current\" = performance ]; then echo \"{\\\"text\\\":\\\"󰓅\\\",\\\"class\\\":\\\"performance\\\"}\"; else echo \"{\\\"text\\\":\\\"󰾆\\\",\\\"class\\\":\\\"balanced\\\"}\"; fi'",
+    "on-click": "sh -c 'if [ \"$(powerprofilesctl get)\" = performance ]; then powerprofilesctl set balanced; else powerprofilesctl set performance; fi'"
   },
   "custom/vpn": {
     "format": "{}",
