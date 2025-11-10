@@ -46,9 +46,20 @@ The examples below assume you cloned the repo and are in its root.
 - stow -d v1 -Dt ~ <package>
 - or: cd v2 && stow -Dt ~ <package>
 
+## v2 helper script (auto‑backup + stow)
+- v2 includes a convenience script: `v2/stow.sh`.
+- What it does:
+  - Checks for conflicts via a dry‑run, backs up existing non‑symlink targets as `*.bak-YYYY-MM-DD-HHMMSS`, removes them, then runs Stow.
+  - Always targets your `$HOME` and handles the fixed packages: `waybar`, `starship`, `omarchy`, `alacritty`.
+- Usage:
+  ```bash
+  ./v2/stow.sh
+  ```
+- Requirement: GNU Stow must be installed and on your `PATH`.
+
 ### Notes
 - Replace <package> with the directory names inside v1/ or v2/ (each is a Stow "package").
-- If you see conflicts, Stow will abort. Move or back up the existing files first, then retry.
+- If you see conflicts, Stow will abort. Move or back up the existing files first, then retry — or use `v2/stow.sh` in v2, which will back up conflicting targets automatically and then stow.
 - You can target a different home with -t /path/to/home if needed.
 - You can mix and match packages across v1 and v2 if that suits your setup, but prefer staying within one version for consistency.
 
