@@ -18,7 +18,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" 2>/dev/null && pwd)
 TARGET_DIR="$HOME"
 
 # Fixed package list (space-separated for POSIX sh)
-packages="waybar starship alacritty omarchy"
+packages="waybar starship alacritty omarchy hyprland"
 
 # Backup a path if it exists and is not already a symlink
 backup_if_needed() {
