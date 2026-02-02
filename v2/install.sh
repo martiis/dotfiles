@@ -2,5 +2,6 @@
 
 set -eu
 
+sh ./packages.sh
 sh ./stow.sh
 sh ./override.sh
