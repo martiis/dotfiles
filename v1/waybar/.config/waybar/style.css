@@ -1,7 +1,7 @@
-@import 'mocha.css';
+@import "mocha.css";
 
 * {
-    background-color: @mantle;
+    background-color: transparent;
     color: @text;
     border: none;
     border-radius: 0;
@@ -10,91 +10,132 @@
     font-size: 16px;
 }
 
+window#waybar {
+    background-color: transparent;
+}
+
 tooltip {
+    background-color: @crust;
     font-family: Ubuntu Mono Nerd Font;
     padding: 2px;
 }
 
 #workspaces {
-    border-radius: 0px;
-    background: @lavender;
+    background: @surface0;
+    border-radius: 10px;
+    margin: 3px 5px 3px 0;
+    padding: 4px 4px 0;
+}
+
+#window {
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+window#waybar.fullscreen #window {
+    opacity: 1;
+    background: @surface1;
+    border-radius: 10px;
+    font-size: 16px;
+    padding: 2px 12px;
+    margin: 3px 5px 3px 0;
+    color: @red;
+}
+
+window#waybar.fullscreen #window * {
+    color: @red;
 }
 
 #workspaces button {
-    background: @lavender;
     all: initial;
-    padding: 3px 8px 0;
-    margin: 0px 4px;
+    background-color: @surface0;
+    padding: 0 8px;
+    margin: 0 2px;
 }
 
 #workspaces button label {
-    background: @lavender;
-    color: @surface2;
+    background-color: @surface0;
+    color: @overlay0;
+    font-size: 16px;
 }
 
 #workspaces button.active label {
-    background: @lavender;
-    color: @crust;
+    background-color: @surface0;
+    color: @lavender;
     font-weight: 900;
 }
 
 #workspaces button.urgent,
 #workspaces button.urgent label {
-    background: @maroon;
-    color: @yellow;
+    background-color: @yellow;
+    color: @crust;
 }
 
 #clock {
-    color: @mantle;
-    background: @maroon;
-    padding: 0 10px;
+    color: @maroon;
+    background: @surface0;
+    border-radius: 10px;
+    margin: 3px 0;
+    padding: 4px 14px 0;
+    font-weight: bold;
 }
 
 #custom-arch {
     min-width: 20px;
-    margin: 0px 20px;
-    font-size: 18px;
+    padding: 0 14px;
+    margin-right: 5px;
+    font-size: 17px;
     color: @blue;
-}
-
-#custom-seperator {
-    color: @surface2;
 }
 
 #cpu,
 #memory {
-    color: @text;
-    margin: 0px 7px;
+    background: @surface0;
+    border-radius: 10px;
+    margin: 3px 5px 3px 0;
+    padding: 2px 12px;
 }
 
-#network.speed {
-    color: @text;
+#cpu {
+    color: @green;
 }
 
-#custom-vpn,
-#custom-power,
-#network,
-#pulseaudio,
+#memory {
+    color: @yellow;
+}
+
 #battery {
     color: @lavender;
-    margin: 0 2px;
-    padding: 0 12px;
-}
-
-#battery {
-    margin: 0px;
-    padding: 0 18px 0 14px;
+    background: @surface0;
+    border-radius: 10px;
+    margin: 3px 5px 3px 0;
+    padding: 2px 14px;
 }
 
 #custom-vpn,
 #custom-power,
+#language,
 #network,
 #pulseaudio {
-    margin: 0 7px 0 2px;
-    padding: 0 12px;
+    background: @surface0;
+    border-radius: 10px;
+    margin: 3px 5px 3px 0;
+    font-size: 18px;
+    color: @lavender;
+}
+
+#pulseaudio {
+    padding: 2px 14px;
+}
+
+#network {
+    padding: 0 16px 0 10px;
 }
 
 #custom-vpn {
+    padding: 0 16px 0 14px;
     color: @red;
 }
 
@@ -102,10 +143,32 @@ tooltip {
     color: @green;
 }
 
+#language {
+    padding: 2px 14px;
+    font-size: 16px;
+    color: @peach;
+}
+
+#custom-power {
+    padding: 2px 14px 2px 11px;
+}
+
 #custom-power.performance {
-  color: @red;
+    color: @red;
 }
 
 #custom-power.balanced {
-  color: @yellow;
+    color: @yellow;
+}
+
+#cpu:hover,
+#memory:hover,
+#clock:hover,
+#network:hover,
+#pulseaudio:hover,
+#battery:hover,
+#custom-vpn:hover,
+#language:hover,
+#custom-power:hover {
+    background: @surface1;
 }
