@@ -1,0 +1,12 @@
+# Copy to ~/.zshrc.local (chmod 600); keep values outside the repository.
+# Migrate private settings manually from your existing ~/.zshrc before linking.
+# Examples of settings that were intentionally excluded:
+# export WG_CONFIG="$HOME/path/to/vpn.conf"
+# export WG_IFACE="your-interface"
+# export GONOSUMDB="your-private-module-paths"
+# export GOPRIVATE="your-private-module-paths"
+# export AWS_DEFAULT_PROFILE="your-profile"
+# export GOOGLE_CLOUD_PROJECT="your-project"
+# export LOKI_ADDR="https://your-loki-host"
+# Put API tokens here, never in the tracked .zshrc.
+# export CDPATH=".:$HOME/path/to/worktrees"

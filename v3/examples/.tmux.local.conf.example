@@ -1,0 +1,3 @@
+# Copy to ~/.tmux.local.conf for machine-specific sessionx locations.
+# set -gF @sessionx-x-path "#{HOME}/Work/your-project"
+# set -gF @sessionx-custom-paths "#{HOME}/Work/your-project:3"

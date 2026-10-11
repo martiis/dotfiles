@@ -1,0 +1,4 @@
+# Portable additions; existing settings remain untouched.
+if [[ -r "$HOME/.config/zsh/v3.zsh" ]]; then
+  source "$HOME/.config/zsh/v3.zsh"
+fi

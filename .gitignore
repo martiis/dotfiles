@@ -1,0 +1,7 @@
+# Private overrides must never be tracked.
+.zshrc.local
+.gitconfig.local
+.tmux.local.conf
+.zshrc.v3-backup-*
+.zshrc.v3-update-*
+__pycache__/

@@ -1,0 +1,25 @@
+[core]
+	excludesfile = ~/.gitignore
+	editor = nano
+	pager = delta
+[init]
+	defaultBranch = main
+[push]
+	default = current
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	side-by-side = true
+[merge]
+	conflictstyle = diff3
+[diff]
+	colorMoved = default
+[commit]
+	gpgsign = true
+[alias]
+	cursor-commit = commit -p
+[url "git@bitbucket.org:"]
+	insteadOf = https://bitbucket.org/
+[url "git@gitlab.com:"]
+	insteadOf = https://gitlab.com/
