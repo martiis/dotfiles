@@ -6,6 +6,7 @@ import tempfile
 import unittest
 
 V3 = Path(__file__).resolve().parents[1]
+GIT_BLOCK_COMMANDS = {"delta": "git-delta", "nano": "nano"}
 
 
 @unittest.skipUnless(shutil.which("stow"), "GNU Stow is required")
@@ -25,6 +26,9 @@ class SetupScriptTests(unittest.TestCase):
         # Fail if a test attempts a package install or clone. Never run either.
         for name in ("sudo", "pacman", "git"):
             self.mock_command(name, 'printf "unexpected\\n" >> "$MOCK_LOG"\nexit 99\n')
+        # Commands the Git block invokes; present by default so the host is irrelevant.
+        for name in GIT_BLOCK_COMMANDS:
+            self.mock_command(name, 'exit 0\n')
         self.env = dict(
             os.environ, HOME=str(self.home), MOCK_LOG=str(self.log),
             PATH=str(self.mock) + os.pathsep + os.environ["PATH"],
@@ -36,6 +40,30 @@ class SetupScriptTests(unittest.TestCase):
         script = self.mock / name
         script.write_text('#!/usr/bin/env bash\n' + body)
         script.chmod(0o700)
+
+    def hide_git_block_commands(self):
+        """Use a PATH where the Git block's commands do not exist at all."""
+        visible = self.base / "visible-bin"
+        visible.mkdir()
+        hidden = set(GIT_BLOCK_COMMANDS)
+        seen = set()
+        for directory in os.environ["PATH"].split(os.pathsep):
+            if not directory or not os.path.isdir(directory):
+                continue
+            for entry in os.scandir(directory):
+                if entry.name in hidden or entry.name in seen:
+                    continue
+                if entry.is_file() and os.access(entry.path, os.X_OK):
+                    seen.add(entry.name)
+                    (visible / entry.name).symlink_to(entry.path)
+        for name in hidden:
+            (self.mock / name).unlink()
+        self.env["PATH"] = str(self.mock) + os.pathsep + str(visible)
+        self.env["MOCK_BIN"] = str(self.mock)
+
+    def assert_untouched(self):
+        self.assertEqual(self.zshrc.read_bytes(), self.original)
+        self.assertEqual(set(self.home.iterdir()), {self.zshrc})
 
     def mock_package_install(self):
         self.mock_command("sudo", 'printf "sudo:%s\\n" "$*" >> "$MOCK_LOG"\n')
@@ -70,6 +98,12 @@ printf 'Clone diagnostic: %s\\n' "$target" >&2
     def test_preview_with_packages_does_not_write(self):
         result = self.run_setup("--packages")
         self.assertEqual(result.stdout.count(b"Would install Arch packages: stow"), 1)
+        installs = [line for line in result.stdout.splitlines()
+                    if line.startswith(b"==> Would install Arch packages:")]
+        packages = set(b" ".join(installs).split())
+        self.assertIn(b"alacritty", packages)
+        self.assertIn(b"libpulse", packages)
+        self.assertNotIn(b"ghostty", packages)
         self.assertEqual(result.stdout.count(b"Would clone TPM."), 1)
         self.assertEqual(self.zshrc.read_bytes(), self.original)
         self.assertEqual(set(self.home.iterdir()), {self.zshrc})
@@ -237,13 +271,61 @@ printf 'Clone diagnostic: %s\\n' "$target" >&2
         self.assertNotIn(b"Clone output:", result.stdout)
         self.assertNotIn(b"Clone diagnostic:", result.stderr)
 
+    def test_missing_git_block_commands_stop_before_any_write(self):
+        self.hide_git_block_commands()
+        for args in ((), ("--apply",)):
+            with self.subTest(args=args):
+                result = self.run_setup(*args, success=False)
+                self.assertIn(b"needs missing packages: git-delta nano", result.stderr)
+                self.assertIn(b"--allow-missing-deps", result.stderr)
+                self.assert_untouched()
+
+    def test_allow_missing_deps_writes_git_block_with_warning(self):
+        self.hide_git_block_commands()
+        result = self.run_setup("--apply", "--allow-missing-deps")
+        self.assertIn(b"continuing because of --allow-missing-deps", result.stderr)
+        self.assertTrue((self.home / ".gitconfig").read_bytes().startswith(b"# >>> dotfiles v3 >>>"))
+
+    def test_package_preview_accepts_missing_git_block_commands(self):
+        self.hide_git_block_commands()
+        result = self.run_setup("--packages")
+        self.assertIn(b"the package stage installs them: git-delta nano", result.stdout)
+        installs = [line for line in result.stdout.splitlines()
+                    if line.startswith(b"==> Would install Arch packages:")]
+        packages = set(b" ".join(installs).split())
+        for package in GIT_BLOCK_COMMANDS.values():
+            self.assertIn(package.encode(), packages)
+        self.assert_untouched()
+
+    def run_package_stage_without_git_block_commands(self, installs):
+        self.hide_git_block_commands()
+        create = "".join(
+            f'printf "#!/bin/sh\\n" > "$MOCK_BIN/{name}"; chmod +x "$MOCK_BIN/{name}"\n'
+            for name in GIT_BLOCK_COMMANDS
+        ) if installs else ""
+        self.mock_command("sudo", 'printf "sudo:%s\\n" "$*" >> "$MOCK_LOG"\n' + create)
+        self.mock_clone(success=True)
+        return self.run_setup("--apply", "--packages", success=installs, external=True)
+
+    def test_package_stage_provides_git_block_commands(self):
+        self.run_package_stage_without_git_block_commands(installs=True)
+        config = (self.home / ".gitconfig").read_bytes()
+        self.assertTrue(config.startswith(b"# >>> dotfiles v3 >>>"))
+
+    def test_git_block_commands_still_missing_after_package_stage_stop_writes(self):
+        result = self.run_package_stage_without_git_block_commands(installs=False)
+        self.assertIn(b"needs missing packages: git-delta nano", result.stderr)
+        self.assertFalse((self.home / ".gitconfig").exists())
+        self.assertFalse((self.home / ".tmux.conf").exists())
+        self.assertEqual(self.zshrc.read_bytes(), self.original)
+
     def test_apply_and_reapply_only_touch_temporary_home(self):
         self.run_setup("--apply")
         self.assertTrue(self.zshrc.read_bytes().startswith(self.original))
         self.assertEqual(self.zshrc.read_bytes().count(b"# >>> dotfiles v3 >>>"), 1)
         self.assertEqual(
-            (self.home / ".config/ghostty/config.ghostty").resolve(),
-            V3 / "ghostty/.config/ghostty/config.ghostty",
+            (self.home / ".config/alacritty/alacritty.toml").resolve(),
+            V3 / "alacritty/.config/alacritty/alacritty.toml",
         )
         self.assertFalse((self.home / ".tmux").is_symlink())
         self.assertFalse((self.home / ".config").is_symlink())

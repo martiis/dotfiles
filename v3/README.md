@@ -1,6 +1,6 @@
 # v3 — Arch Linux + GNOME
 
-Starting point for GNOME on Wayland with Ghostty, Zsh, tmux, and Git.
+Starting point for GNOME on Wayland with Alacritty, Zsh, tmux, and Git.
 Based on the current GNOME 51 setup; v1 and v2 remain unchanged.
 Nothing here is applied automatically.
 
@@ -8,7 +8,7 @@ Nothing here is applied automatically.
 
 | Directory | Purpose |
 | --- | --- |
-| `ghostty/` | Stow package: Gruvbox Dark, Meslo font, slim GTK titlebar |
+| `alacritty/` | Stow package: Gruvbox Dark, Meslo font, audio bell, XDG terminal preferences |
 | `zsh/` | Stow package: portable additions in `~/.config/zsh/v3.zsh`; **no copy of .zshrc** |
 | `tmux/` | Stow package: current layout, bindings, plugin declarations, RAM/rename helpers |
 | `git/` | Non-stowed templates for managed blocks in private `~/.gitconfig` and `~/.gitignore` |
@@ -29,20 +29,24 @@ Install only what you use. Nothing installs automatically: linking alone does
 not install applications or plugins. Explicit `--apply --packages` (or
 `packages.sh --apply`) opts into Arch package installation and plugin bootstrap.
 
-- Core: Bash, GNU coreutils/grep, GNU Stow, Zsh, Ghostty, tmux (baseline tested with 3.8), Git.
+- Core: Bash, GNU coreutils/grep, GNU Stow, Zsh, Alacritty, tmux (baseline tested with 3.8), Git.
 - Managed-block updater apply mode: util-linux `flock` and GNU `mv` supporting
   `--exchange`, `--no-copy`, and `--update=none-fail` (tested with coreutils 9.12).
   Older utilities are refused before updater writes; preview does not need these flags.
-- Tests only: Python 3.9+; setup and the managed-block updater do not need Python.
-- Ghostty: MesloLGS Nerd Font Mono and the freedesktop sound theme.
-- Git: `nano`, `git-delta`, GnuPG and a configured signing key.
+- Tests only: Python 3.9+ (3.11+ for TOML validation); setup and the managed-block updater do not need Python.
+- Alacritty: MesloLGS Nerd Font Mono, `libpulse` (`paplay`), and the freedesktop sound theme.
+  The bell uses external `paplay`, not GTK/GStreamer. The config imports its bundled
+  Gruvbox Dark theme relative to the config file and preserves the current 11pt font,
+  10px padding, 95% opacity, blur, and `xterm-256color` compatibility.
+- Git: `nano`, `git-delta`, GnuPG and a configured signing key. The installer
+  refuses to write the Git block while `delta` or `nano` is missing (see below).
 - Optional Zsh additions: `eza`, `bat`. Existing Oh My Zsh/fzf/zoxide setup is left alone.
 - tmux plugins: TPM; its declared plugins require tools such as `fzf`,
   `zoxide`, `lazygit`, `wl-clipboard`, and Rust/Cargo for tmux-thumbs.
   Plugin code is not vendored. The opt-in package stage clones TPM, Oh My Zsh,
   zsh-autosuggestions, and zsh-syntax-highlighting from public GitHub repositories;
   it does not install the plugins declared in the tmux config.
-- GNOME: `dconf`; the terminal shortcut launches Ghostty.
+- GNOME: `dconf` and Alacritty; the default terminal and terminal shortcut use Alacritty.
 - GNOME schema validation tests: Arch's `python-gobject`.
 
 ## Bash setup scripts
@@ -64,11 +68,20 @@ bash v3/install.sh --apply             # link packages and update the Zsh/Git bl
 bash v3/install.sh --apply --packages  # also install Arch packages/clone plugins
 ```
 
-The runner previews Stow (Ghostty, Zsh, tmux), the Zsh block, the Git config
+The runner previews Stow (Alacritty, Zsh, tmux), the Zsh block, the Git config
 block, and the Git ignore block, in that order. When `--packages` is selected it also runs
 `packages.sh` in preview mode before any package/bootstrap or config writes.
 Apply then runs the optional package stage, Stow, the Zsh block, and the Git
 blocks, in that order. Preview-only mode runs that package preview once.
+
+The shared Git block sets `delta` as pager and `git add -p` diff filter and
+`nano` as editor; without delta, `git add -p` fails in a colour terminal. So the
+preflight refuses, in preview and apply, when `delta` or `nano` is not on `PATH`,
+before any package, link, or config write. With `--packages` the preflight
+accepts them as pending, and the runner re-checks after the package stage,
+stopping before linking if they are still missing. If you override the pager and
+editor in the private part of `~/.gitconfig`, pass `--allow-missing-deps` to
+write the block anyway with a warning.
 Stow must already be installed; on a fresh Arch machine, install Stow first (for example, `sudo pacman -S stow`).
 Package installation uses interactive `sudo pacman -S --needed`, not `--noconfirm`
 or AUR helpers. Existing plugin Git checkouts are left untouched; non-checkout
@@ -93,10 +106,10 @@ Extension settings/credentials are intentionally not exported.
 Run from the repository root. GNOME settings and the Zsh/Git updaters are separate steps.
 
 ```sh
-stow --no-folding -d v3 -n -v -t "$HOME" ghostty zsh tmux
+stow --no-folding -d v3 -n -v -t "$HOME" alacritty zsh tmux
 ```
 
-Existing Ghostty and tmux files will conflict. Back them up outside the
+Existing Alacritty, XDG terminal preference, and tmux files may conflict. Back them up outside the
 checkout, inspect the differences, and move only the specific conflicting files
 before applying. Never use `--adopt`: it could copy private host files into Git.
 Do not delete entire configuration directories or stow every directory in v3.
@@ -113,7 +126,7 @@ Optional private Zsh/tmux overrides can be created from the templates in
 After reviewing and resolving conflicts yourself:
 
 ```sh
-stow --no-folding -d v3 -v -t "$HOME" ghostty zsh tmux
+stow --no-folding -d v3 -v -t "$HOME" alacritty zsh tmux
 ```
 
 If you did not opt into `--packages`, optionally install TPM separately at
@@ -158,6 +171,9 @@ bash v3/.scripts/update-block.sh --file "$HOME/.gitconfig" --block v3/git/gitcon
 bash v3/.scripts/update-block.sh --file "$HOME/.gitignore" --block v3/git/gitignore --position prepend
 # Add --apply to each command after reviewing the previews.
 ```
+
+These manual commands skip the installer's `delta`/`nano` check; install
+`git-delta` and `nano` first or override the pager/editor privately.
 
 ## Update the existing Zsh startup file
 
@@ -241,7 +257,10 @@ only for missing names: `ls` (`eza -lh --group-directories-first --icons=auto`),
 ## GNOME preferences (separate, opt-in)
 
 `gnome/settings.ini` contains selected appearance, input, window/workspace,
-keyboard shortcut, and extension-enable settings.
+keyboard shortcut, default-terminal, and extension-enable settings. Super+Enter
+and GNOME's default-terminal command launch Alacritty. The Alacritty Stow package
+also supplies `xdg-terminals.list` and `gnome-xdg-terminals.list`; these preferences
+are used by `xdg-terminal-exec` if installed.
 
 **Loading it replaces the custom-shortcut and enabled-extension lists**, including
 existing entries on another machine. Review first. It does not install extensions.
@@ -271,14 +290,15 @@ for script in v3/*.sh v3/.scripts/*.sh; do bash -n "$script"; done
 zsh -n v3/zsh/.config/zsh/v3.zsh
 bash -n v3/tmux/.tmux/scripts/rename-window.sh
 bash -n v3/tmux/.tmux/scripts/ram_progress.sh
-ghostty +validate-config --config-file="$PWD/v3/ghostty/.config/ghostty/config.ghostty"
+alacritty migrate --dry-run --config-file="$PWD/v3/alacritty/.config/alacritty/alacritty.toml"
 git diff --check
 ```
 
 Tests cover generic/Zsh updater privacy, append/prepend/in-place replacement,
 backup placement and permissions, cross-device refusal, idempotency, concurrent
 edits and refusal cases; Git rendering with synthetic private identity/overrides;
-preview-only setup, bootstrap/config conflict preflights,
+preview-only setup, bootstrap/config conflict preflights, missing Git-block
+command refusal/override/package-stage re-check with a filtered `PATH`,
 existing-checkout preservation and mock clone diagnostic privacy in a temporary
-home; package linking; isolated tmux config loading; and GNOME schema/value checks
+home; package linking, bundled Alacritty theme/TOML validation; isolated tmux config loading; and GNOME schema/value checks
 when PyGObject is available. No test installs system packages or clones plugins.

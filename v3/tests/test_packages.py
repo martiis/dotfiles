@@ -5,6 +5,11 @@ import subprocess
 import tempfile
 import unittest
 
+try:
+    import tomllib
+except ImportError:
+    tomllib = None
+
 V3 = Path(__file__).resolve().parents[1]
 
 
@@ -15,11 +20,13 @@ class PackageTests(unittest.TestCase):
             target = Path(directory)
             env = dict(os.environ, HOME=directory)
             command = ["stow", "--no-folding", "-d", str(V3), "-t", str(target)]
-            packages = ["ghostty", "zsh", "tmux"]
+            packages = ["alacritty", "zsh", "tmux"]
             subprocess.run(command + packages, env=env, check=True, capture_output=True)
             expected = {
-                ".config/ghostty/config.ghostty": "ghostty",
-                ".config/ghostty/slim-titlebar.css": "ghostty",
+                ".config/alacritty/alacritty.toml": "alacritty",
+                ".config/alacritty/theme/gruvbox-dark.toml": "alacritty",
+                ".config/xdg-terminals.list": "alacritty",
+                ".config/gnome-xdg-terminals.list": "alacritty",
                 ".config/zsh/v3.zsh": "zsh",
                 ".tmux.conf": "tmux",
                 ".tmux/scripts/rename-window.sh": "tmux",
@@ -29,6 +36,8 @@ class PackageTests(unittest.TestCase):
                 self.assertEqual((target / relative).resolve(), V3 / package / relative)
             self.assertFalse((target / ".tmux").is_symlink())
             self.assertFalse((target / ".config").is_symlink())
+            self.assertFalse((target / ".config/alacritty").is_symlink())
+            self.assertFalse((target / ".config/alacritty/theme").is_symlink())
             self.assertFalse((target / ".zshrc").exists())
             self.assertFalse((target / ".gitconfig").exists())
             self.assertFalse((target / ".gitignore").exists())
@@ -36,6 +45,18 @@ class PackageTests(unittest.TestCase):
             for relative in expected:
                 self.assertFalse((target / relative).exists())
                 self.assertFalse((target / relative).is_symlink())
+
+    @unittest.skipIf(tomllib is None, "Python 3.11+ is required for TOML validation")
+    def test_alacritty_config_imports_bundled_theme_and_uses_external_audio(self):
+        directory = V3 / "alacritty/.config/alacritty"
+        config = tomllib.loads((directory / "alacritty.toml").read_text())
+        self.assertEqual(config["general"]["import"], ["theme/gruvbox-dark.toml"])
+        theme = tomllib.loads((directory / config["general"]["import"][0]).read_text())
+        self.assertEqual(theme["colors"]["primary"]["background"], "#282828")
+        self.assertEqual(config["env"]["TERM"], "xterm-256color")
+        self.assertEqual(config["bell"]["command"]["program"], "paplay")
+        for name in ("xdg-terminals.list", "gnome-xdg-terminals.list"):
+            self.assertEqual((directory.parent / name).read_text(), "Alacritty.desktop\n")
 
     @unittest.skipUnless(shutil.which("tmux"), "tmux is required")
     def test_tmux_config_loads_in_isolated_server_without_plugins(self):

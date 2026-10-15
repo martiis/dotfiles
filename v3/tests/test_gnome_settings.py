@@ -19,6 +19,7 @@ class GnomeSettingsTests(unittest.TestCase):
     def test_only_selected_sections_are_exported(self):
         expected = {
             "org/gnome/desktop/interface", "org/gnome/desktop/wm/preferences",
+            "org/gnome/desktop/default-applications/terminal",
             "org/gnome/desktop/wm/keybindings", "org/gnome/mutter",
             "org/gnome/mutter/keybindings", "org/gnome/desktop/input-sources",
             "org/gnome/desktop/peripherals/touchpad",
@@ -27,6 +28,16 @@ class GnomeSettingsTests(unittest.TestCase):
             "org/gnome/shell", "org/gnome/shell/keybindings",
         }
         self.assertEqual(set(self.config.sections()), expected)
+
+    def test_default_terminal_and_shortcut_use_alacritty(self):
+        terminal = self.config["org/gnome/desktop/default-applications/terminal"]
+        self.assertEqual(ast.literal_eval(terminal["exec"]), "alacritty")
+        self.assertEqual(ast.literal_eval(terminal["exec-arg"]), "-e")
+        shortcut = self.config[
+            "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0"
+        ]
+        self.assertEqual(ast.literal_eval(shortcut["command"]), "/usr/bin/alacritty")
+        self.assertEqual(ast.literal_eval(shortcut["binding"]), "<Super>Return")
 
     def test_workspace_accelerators_have_no_application_binding_conflicts(self):
         application_bindings = self.config["org/gnome/shell/keybindings"]
