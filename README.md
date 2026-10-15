@@ -26,8 +26,8 @@ bash v3/install.sh --apply --packages  # also opt into packages and TPM/OMZ/Zsh 
 # Without --packages, the Git block is refused while delta/nano are missing;
 # --allow-missing-deps overrides when you set your own pager/editor privately.
 # Manual linking alternative (does not update Zsh/Git managed blocks):
-stow --no-folding -d v3 -n -t "$HOME" alacritty zsh tmux
-stow --no-folding -d v3 -t "$HOME" alacritty zsh tmux
+stow --no-folding -d v3 -n -t "$HOME" alacritty zsh tmux herdr
+stow --no-folding -d v3 -t "$HOME" alacritty zsh tmux herdr
 ```
 
 Git files are **not Stow-linked** in v3: shared preferences/ignores are managed
@@ -91,7 +91,7 @@ and unstow commands.
 - Requirement: GNU Stow must be installed and on your `PATH`.
 
 ### Notes
-- Replace <package> with package directories inside the chosen version. For v3, only `alacritty`, `zsh`, and `tmux` are Stow packages; GNOME settings are applied separately.
+- Replace <package> with package directories inside the chosen version. For v3, only `alacritty`, `zsh`, `tmux`, and `herdr` are Stow packages; GNOME settings are applied separately.
 - If you see conflicts, Stow will abort. Move or back up the existing files first, then retry — or use `v2/stow.sh` in v2, which will back up conflicting targets automatically and then stow.
 - You can target a different home with -t /path/to/home if needed.
 - You can mix packages across versions, but never link overlapping configurations from multiple versions.

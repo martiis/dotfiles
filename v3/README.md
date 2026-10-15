@@ -1,6 +1,6 @@
 # v3 — Arch Linux + GNOME
 
-Starting point for GNOME on Wayland with Alacritty, Zsh, tmux, and Git.
+Starting point for GNOME on Wayland with Alacritty, Zsh, tmux, Herdr, and Git.
 Based on the current GNOME 51 setup; v1 and v2 remain unchanged.
 Nothing here is applied automatically.
 
@@ -11,6 +11,7 @@ Nothing here is applied automatically.
 | `alacritty/` | Stow package: Gruvbox Dark, Meslo font, audio bell, XDG terminal preferences |
 | `zsh/` | Stow package: portable additions in `~/.config/zsh/v3.zsh`; **no copy of .zshrc** |
 | `tmux/` | Stow package: current layout, bindings, plugin declarations, RAM/rename helpers |
+| `herdr/` | Stow package: `config.toml` only — tmux-style Ctrl+s bindings, Gruvbox, lazygit popup |
 | `git/` | Non-stowed templates for managed blocks in private `~/.gitconfig` and `~/.gitignore` |
 | `gnome/` | Selected dconf preferences and shortcuts; **not a Stow package** |
 | `install.sh` | Preview-first entry point for linking and Zsh/Git managed blocks |
@@ -47,6 +48,12 @@ not install applications or plugins. Explicit `--apply --packages` (or
   Plugin code is not vendored. The opt-in package stage clones TPM, Oh My Zsh,
   zsh-autosuggestions, and zsh-syntax-highlighting from public GitHub repositories;
   it does not install the plugins declared in the tmux config.
+- Herdr: install it yourself (it self-updates with `herdr update`); it is not an
+  Arch package, so the package stage does not install it. The popup uses `lazygit`.
+  It shares tmux's Ctrl+s prefix, so do not nest tmux inside Herdr without a
+  private prefix change. Only `config.toml` is linked: Herdr keeps sockets, logs,
+  and session state in the same directory. The config pre-sets `onboarding = false`
+  so first launch does not rewrite the linked file; `herdr config reset-keys` would.
 - GNOME: `dconf` and Alacritty; the default terminal and terminal shortcut use Alacritty.
 - GNOME schema validation tests: Arch's `python-gobject`.
 
@@ -69,7 +76,7 @@ bash v3/install.sh --apply             # link packages and update the Zsh/Git bl
 bash v3/install.sh --apply --packages  # also install Arch packages/clone plugins
 ```
 
-The runner previews Stow (Alacritty, Zsh, tmux), the Zsh block, the Git config
+The runner previews Stow (Alacritty, Zsh, tmux, Herdr), the Zsh block, the Git config
 block, and the Git ignore block, in that order. When `--packages` is selected it also runs
 `packages.sh` in preview mode before any package/bootstrap or config writes.
 Apply then runs the optional package stage, Stow, the Zsh block, and the Git
@@ -107,14 +114,14 @@ Extension settings/credentials are intentionally not exported.
 Run from the repository root. GNOME settings and the Zsh/Git updaters are separate steps.
 
 ```sh
-stow --no-folding -d v3 -n -v -t "$HOME" alacritty zsh tmux
+stow --no-folding -d v3 -n -v -t "$HOME" alacritty zsh tmux herdr
 ```
 
-Existing Alacritty, XDG terminal preference, and tmux files may conflict. Back them up outside the
+Existing Alacritty, XDG terminal preference, tmux, and Herdr files may conflict. Back them up outside the
 checkout, inspect the differences, and move only the specific conflicting files
 before applying. Never use `--adopt`: it could copy private host files into Git.
 Do not delete entire configuration directories or stow every directory in v3.
-Always use `--no-folding`: directories such as `~/.tmux` must remain local so
+Always use `--no-folding`: directories such as `~/.tmux` and `~/.config/herdr` must remain local so
 plugins and private session state cannot end up inside the checkout.
 
 Git files are **not linked**; keep the existing private files in place and review
@@ -127,7 +134,7 @@ Optional private Zsh/tmux overrides can be created from the templates in
 After reviewing and resolving conflicts yourself:
 
 ```sh
-stow --no-folding -d v3 -v -t "$HOME" alacritty zsh tmux
+stow --no-folding -d v3 -v -t "$HOME" alacritty zsh tmux herdr
 ```
 
 If you did not opt into `--packages`, optionally install TPM separately at
@@ -301,5 +308,7 @@ edits and refusal cases; Git rendering with synthetic private identity/overrides
 preview-only setup, bootstrap/config conflict preflights, missing Git-block
 command refusal/override/package-stage re-check with a filtered `PATH`,
 existing-checkout preservation and mock clone diagnostic privacy in a temporary
-home; package linking, bundled Alacritty theme/TOML validation; isolated tmux config loading; and GNOME schema/value checks
+home; package linking, bundled Alacritty theme/TOML validation; isolated tmux config loading;
+Herdr TOML validation and `herdr config check` against a temporary config home
+when Herdr is installed; and GNOME schema/value checks
 when PyGObject is available. No test installs system packages or clones plugins.

@@ -20,7 +20,7 @@ class PackageTests(unittest.TestCase):
             target = Path(directory)
             env = dict(os.environ, HOME=directory)
             command = ["stow", "--no-folding", "-d", str(V3), "-t", str(target)]
-            packages = ["alacritty", "zsh", "tmux"]
+            packages = ["alacritty", "zsh", "tmux", "herdr"]
             subprocess.run(command + packages, env=env, check=True, capture_output=True)
             expected = {
                 ".config/alacritty/alacritty.toml": "alacritty",
@@ -31,6 +31,7 @@ class PackageTests(unittest.TestCase):
                 ".tmux.conf": "tmux",
                 ".tmux/scripts/rename-window.sh": "tmux",
                 ".tmux/scripts/ram_progress.sh": "tmux",
+                ".config/herdr/config.toml": "herdr",
             }
             for relative, package in expected.items():
                 self.assertEqual((target / relative).resolve(), V3 / package / relative)
@@ -38,6 +39,8 @@ class PackageTests(unittest.TestCase):
             self.assertFalse((target / ".config").is_symlink())
             self.assertFalse((target / ".config/alacritty").is_symlink())
             self.assertFalse((target / ".config/alacritty/theme").is_symlink())
+            # Herdr writes sockets, logs, and session state beside its config.
+            self.assertFalse((target / ".config/herdr").is_symlink())
             self.assertFalse((target / ".zshrc").exists())
             self.assertFalse((target / ".gitconfig").exists())
             self.assertFalse((target / ".gitignore").exists())
@@ -57,6 +60,28 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(config["bell"]["command"]["program"], "paplay")
         for name in ("xdg-terminals.list", "gnome-xdg-terminals.list"):
             self.assertEqual((directory.parent / name).read_text(), "Alacritty.desktop\n")
+
+    @unittest.skipIf(tomllib is None, "Python 3.11+ is required for TOML validation")
+    def test_herdr_config_keeps_tmux_prefix_and_skips_onboarding(self):
+        config = tomllib.loads((V3 / "herdr/.config/herdr/config.toml").read_text())
+        self.assertIs(config["onboarding"], False)
+        self.assertEqual(config["keys"]["prefix"], "ctrl+s")
+        self.assertEqual(config["theme"]["name"], "gruvbox")
+        self.assertEqual(config["keys"]["command"][0]["command"], "lazygit")
+        self.assertEqual(sorted(p.name for p in (V3 / "herdr/.config/herdr").iterdir()),
+                         ["config.toml"])
+
+    @unittest.skipUnless(shutil.which("herdr"), "Herdr is required")
+    def test_herdr_accepts_config_from_temporary_config_home(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config_home = Path(directory)
+            (config_home / "herdr").mkdir()
+            shutil.copy(V3 / "herdr/.config/herdr/config.toml", config_home / "herdr")
+            env = dict(os.environ, HOME=directory, XDG_CONFIG_HOME=directory)
+            result = subprocess.run(["herdr", "config", "check"], env=env,
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("config: ok", result.stdout + result.stderr)
 
     @unittest.skipUnless(shutil.which("tmux"), "tmux is required")
     def test_tmux_config_loads_in_isolated_server_without_plugins(self):
