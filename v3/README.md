@@ -38,7 +38,8 @@ not install applications or plugins. Explicit `--apply --packages` (or
   The bell uses external `paplay`, not GTK/GStreamer. The config imports its bundled
   Gruvbox Dark theme relative to the config file and preserves the current 11pt font,
   10px padding, 95% opacity, blur, and `xterm-256color` compatibility.
-- Git: `nano`, `git-delta`, GnuPG and a configured signing key. The installer
+- Git 2.38+ (for `merge.conflictstyle=zdiff3` and `rebase.updateRefs`): `nano`,
+  `git-delta`, GnuPG and a configured signing key. The installer
   refuses to write the Git block while `delta` or `nano` is missing (see below).
 - Optional Zsh additions: `eza`, `bat`. Existing Oh My Zsh/fzf/zoxide setup is left alone.
 - tmux plugins: TPM; its declared plugins require tools such as `fzf`,

@@ -6,17 +6,29 @@
 	defaultBranch = main
 [push]
 	default = current
+	autoSetupRemote = true
+[fetch]
+	prune = true
+[rebase]
+	autoStash = true
+	updateRefs = true
+[rerere]
+	enabled = true
+[branch]
+	sort = -committerdate
 [interactive]
 	diffFilter = delta --color-only
 [delta]
 	navigate = true
 	side-by-side = true
 [merge]
-	conflictstyle = diff3
+	conflictstyle = zdiff3
 [diff]
+	algorithm = histogram
 	colorMoved = default
 [commit]
 	gpgsign = true
+	verbose = true
 [alias]
 	cursor-commit = commit -p
 [url "git@bitbucket.org:"]
