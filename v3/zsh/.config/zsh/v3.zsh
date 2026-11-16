@@ -11,6 +11,18 @@ fi
 (( ! $+aliases[...] && ! $+functions[...] )) && alias ...='cd ../..'
 (( ! $+aliases[....] && ! $+functions[....] )) && alias ....='cd ../../..'
 
+# Yazi shell integration: keep an existing alias/function authoritative.
+if (( $+commands[yazi] && ! $+aliases[y] && ! $+functions[y] )); then
+  function y() {
+    local tmp cwd
+    tmp="$(mktemp -t "yazi-cwd.XXXXXX")" || return
+    command yazi "$@" --cwd-file="$tmp"
+    IFS= read -r -d '' cwd < "$tmp"
+    [[ -n "$cwd" && "$cwd" != "$PWD" ]] && builtin cd -- "$cwd"
+    command rm -f -- "$tmp"
+  }
+fi
+
 # Optional private overrides; never tracked.
 if [[ -r "$HOME/.zshrc.local" ]]; then
   source "$HOME/.zshrc.local"

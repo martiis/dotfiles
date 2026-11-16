@@ -103,6 +103,7 @@ printf 'Clone diagnostic: %s\\n' "$target" >&2
         packages = set(b" ".join(installs).split())
         self.assertIn(b"alacritty", packages)
         self.assertIn(b"libpulse", packages)
+        self.assertIn(b"yazi", packages)
         self.assertNotIn(b"ghostty", packages)
         self.assertEqual(result.stdout.count(b"Would clone TPM."), 1)
         self.assertEqual(self.zshrc.read_bytes(), self.original)

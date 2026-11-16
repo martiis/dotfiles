@@ -1,0 +1,13 @@
+[opener]
+edit = [
+  { run = 'zed %s', orphan = true, desc = "Zed", for = "unix" },
+]
+lectio = [
+  { run = 'lectio %s', orphan = true, desc = "Lectio", for = "unix" },
+]
+
+[open]
+prepend_rules = [
+  { url = "*.md", use = ["lectio", "edit"] },
+  { mime = "text/markdown", use = ["lectio", "edit"] },
+]

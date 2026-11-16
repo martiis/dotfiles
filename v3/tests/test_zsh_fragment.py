@@ -6,7 +6,7 @@ import unittest
 
 FRAGMENT = Path(__file__).resolve().parents[1] / "zsh" / ".config" / "zsh" / "v3.zsh"
 ZSH = shutil.which("zsh")
-NAMES = ("ls", "lt", "cat", "..", "...", "....")
+NAMES = ("ls", "lt", "cat", "..", "...", "....", "y")
 
 
 @unittest.skipUnless(ZSH, "Zsh is required")
@@ -27,7 +27,7 @@ class ZshFragmentTests(unittest.TestCase):
         }
 
     def mock_optional_commands(self):
-        for name in ("eza", "bat"):
+        for name in ("eza", "bat", "yazi"):
             executable = self.bin / name
             executable.write_text(f'#!/bin/sh\nprintf "%s\\n" "{name}" "$@"\n')
             executable.chmod(0o700)
@@ -73,10 +73,36 @@ class ZshFragmentTests(unittest.TestCase):
                     [str(destination)],
                 )
 
+    def test_yazi_changes_directory_forwards_arguments_and_removes_cwd_file(self):
+        for name in ("mktemp", "rm"):
+            (self.bin / name).symlink_to(shutil.which(name))
+        destination = self.home / "directory with spaces"
+        destination.mkdir()
+        executable = self.bin / "yazi"
+        executable.write_text(
+            '#!/bin/sh\n'
+            'printf "%s\\n" "$1"\n'
+            'tmp=${2#--cwd-file=}\n'
+            f'printf "%s" "{destination}" > "$tmp"\n'
+            f'printf "%s" "$tmp" > "{self.home / "cwd-file"}"\n'
+        )
+        executable.chmod(0o700)
+        self.assertEqual(
+            self.run_fragment(after='y "argument with spaces"\npwd'),
+            ["argument with spaces", str(destination)],
+        )
+        self.assertFalse(Path((self.home / "cwd-file").read_text()).exists())
+
+    def test_yazi_without_directory_output_keeps_current_directory(self):
+        self.mock_optional_commands()
+        for name in ("mktemp", "rm"):
+            (self.bin / name).symlink_to(shutil.which(name))
+        self.assertEqual(self.run_fragment(after='y >/dev/null\npwd'), [str(self.home)])
+
     def test_optional_defaults_are_absent_without_commands(self):
         self.assertEqual(
-            self.run_fragment(after='print -r -- $+aliases[ls] $+aliases[lt] $+aliases[cat]'),
-            ["0 0 0"],
+            self.run_fragment(after='print -r -- $+aliases[ls] $+aliases[lt] $+aliases[cat] $+functions[y]'),
+            ["0 0 0 0"],
         )
 
     def test_optional_private_overrides_are_sourced(self):
@@ -90,10 +116,10 @@ class ZshFragmentTests(unittest.TestCase):
         self.assertEqual(
             self.run_fragment(
                 after='print -r -- $+aliases[ls] $+aliases[lt] $+aliases[cat] '
-                      '$+aliases[..] $+aliases[...] $+aliases[....]',
+                      '$+aliases[..] $+aliases[...] $+aliases[....] $+functions[y]',
                 interactive=False,
             ),
-            ["0 0 0 0 0 0"],
+            ["0 0 0 0 0 0 0"],
         )
 
 

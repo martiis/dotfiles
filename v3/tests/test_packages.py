@@ -20,7 +20,7 @@ class PackageTests(unittest.TestCase):
             target = Path(directory)
             env = dict(os.environ, HOME=directory)
             command = ["stow", "--no-folding", "-d", str(V3), "-t", str(target)]
-            packages = ["alacritty", "zsh", "tmux", "herdr"]
+            packages = ["alacritty", "zsh", "tmux", "herdr", "yazi"]
             subprocess.run(command + packages, env=env, check=True, capture_output=True)
             expected = {
                 ".config/alacritty/alacritty.toml": "alacritty",
@@ -32,6 +32,7 @@ class PackageTests(unittest.TestCase):
                 ".tmux/scripts/rename-window.sh": "tmux",
                 ".tmux/scripts/ram_progress.sh": "tmux",
                 ".config/herdr/config.toml": "herdr",
+                ".config/yazi/yazi.toml": "yazi",
             }
             for relative, package in expected.items():
                 self.assertEqual((target / relative).resolve(), V3 / package / relative)
@@ -41,6 +42,7 @@ class PackageTests(unittest.TestCase):
             self.assertFalse((target / ".config/alacritty/theme").is_symlink())
             # Herdr writes sockets, logs, and session state beside its config.
             self.assertFalse((target / ".config/herdr").is_symlink())
+            self.assertFalse((target / ".config/yazi").is_symlink())
             self.assertFalse((target / ".zshrc").exists())
             self.assertFalse((target / ".gitconfig").exists())
             self.assertFalse((target / ".gitignore").exists())
@@ -70,6 +72,18 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(config["keys"]["command"][0]["command"], "lazygit")
         self.assertEqual(sorted(p.name for p in (V3 / "herdr/.config/herdr").iterdir()),
                          ["config.toml"])
+
+    @unittest.skipIf(tomllib is None, "Python 3.11+ is required for TOML validation")
+    def test_yazi_openers_and_markdown_rules(self):
+        config = tomllib.loads((V3 / "yazi/.config/yazi/yazi.toml").read_text())
+        self.assertEqual(config["opener"]["edit"][0]["run"], "zed %s")
+        self.assertEqual(config["opener"]["lectio"][0]["run"], "lectio %s")
+        self.assertEqual(config["open"]["prepend_rules"], [
+            {"url": "*.md", "use": ["lectio", "edit"]},
+            {"mime": "text/markdown", "use": ["lectio", "edit"]},
+        ])
+        self.assertEqual(sorted(p.name for p in (V3 / "yazi/.config/yazi").iterdir()),
+                         ["yazi.toml"])
 
     @unittest.skipUnless(shutil.which("herdr"), "Herdr is required")
     def test_herdr_accepts_config_from_temporary_config_home(self):

@@ -1,6 +1,6 @@
 # v3 — Arch Linux + GNOME
 
-Starting point for GNOME on Wayland with Alacritty, Zsh, tmux, Herdr, and Git.
+Starting point for GNOME on Wayland with Alacritty, Zsh, tmux, Herdr, Yazi, and Git.
 Based on the current GNOME 51 setup; v1 and v2 remain unchanged.
 Nothing here is applied automatically.
 
@@ -12,6 +12,7 @@ Nothing here is applied automatically.
 | `zsh/` | Stow package: portable additions in `~/.config/zsh/v3.zsh`; **no copy of .zshrc** |
 | `tmux/` | Stow package: current layout, bindings, plugin declarations, RAM/rename helpers |
 | `herdr/` | Stow package: `config.toml` only — tmux-style Ctrl+s bindings, Gruvbox, lazygit popup |
+| `yazi/` | Stow package: Zed editor and Lectio-first Markdown openers; no plugins or state |
 | `git/` | Non-stowed templates for managed blocks in private `~/.gitconfig` and `~/.gitignore` |
 | `gnome/` | Selected dconf preferences and shortcuts; **not a Stow package** |
 | `install.sh` | Preview-first entry point for linking and Zsh/Git managed blocks |
@@ -42,7 +43,10 @@ not install applications or plugins. Explicit `--apply --packages` (or
 - Git 2.38+ (for `merge.conflictstyle=zdiff3` and `rebase.updateRefs`): `nano`,
   `git-delta`, GnuPG and a configured signing key. The installer
   refuses to write the Git block while `delta` or `nano` is missing (see below).
-- Optional Zsh additions: `eza`, `bat`. Existing Oh My Zsh/fzf/zoxide setup is left alone.
+- Yazi: `yazi` (included in the opt-in package stage). Its configured openers require
+  `zed` and `lectio` on `PATH`; install those separately. Only `yazi.toml` is linked;
+  plugins, themes, and other local files remain outside the checkout.
+- Optional Zsh additions: `eza`, `bat`, `yazi`. Existing Oh My Zsh/fzf/zoxide setup is left alone.
 - tmux plugins: TPM; its declared plugins require tools such as `fzf`,
   `zoxide`, `lazygit`, `wl-clipboard`, and Rust/Cargo for tmux-thumbs.
   Plugin code is not vendored. The opt-in package stage clones TPM, Oh My Zsh,
@@ -76,7 +80,7 @@ bash v3/install.sh --apply             # link packages and update the Zsh/Git bl
 bash v3/install.sh --apply --packages  # also install Arch packages/clone plugins
 ```
 
-The runner previews Stow (Alacritty, Zsh, tmux, Herdr), the Zsh block, the Git config
+The runner previews Stow (Alacritty, Zsh, tmux, Herdr, Yazi), the Zsh block, the Git config
 block, and the Git ignore block, in that order. When `--packages` is selected it also runs
 `packages.sh` in preview mode before any package/bootstrap or config writes.
 Apply then runs the optional package stage, Stow, the Zsh block, and the Git
@@ -114,14 +118,14 @@ Extension settings/credentials are intentionally not exported.
 Run from the repository root. GNOME settings and the Zsh/Git updaters are separate steps.
 
 ```sh
-stow --no-folding -d v3 -n -v -t "$HOME" alacritty zsh tmux herdr
+stow --no-folding -d v3 -n -v -t "$HOME" alacritty zsh tmux herdr yazi
 ```
 
-Existing Alacritty, XDG terminal preference, tmux, and Herdr files may conflict. Back them up outside the
+Existing Alacritty, XDG terminal preference, tmux, Herdr, and Yazi files may conflict. Back them up outside the
 checkout, inspect the differences, and move only the specific conflicting files
 before applying. Never use `--adopt`: it could copy private host files into Git.
 Do not delete entire configuration directories or stow every directory in v3.
-Always use `--no-folding`: directories such as `~/.tmux` and `~/.config/herdr` must remain local so
+Always use `--no-folding`: directories such as `~/.tmux`, `~/.config/herdr`, and `~/.config/yazi` must remain local so
 plugins and private session state cannot end up inside the checkout.
 
 Git files are **not linked**; keep the existing private files in place and review
@@ -134,7 +138,7 @@ Optional private Zsh/tmux overrides can be created from the templates in
 After reviewing and resolving conflicts yourself:
 
 ```sh
-stow --no-folding -d v3 -v -t "$HOME" alacritty zsh tmux herdr
+stow --no-folding -d v3 -v -t "$HOME" alacritty zsh tmux herdr yazi
 ```
 
 If you did not opt into `--packages`, optionally install TPM separately at
@@ -260,7 +264,10 @@ The fragment preserves existing aliases **and functions**. Defaults are added
 only for missing names: `ls` (`eza -lh --group-directories-first --icons=auto`),
 `lt` (`eza --tree --level=2 --long --icons --git`), `cat` (`bat`), `..` (`cd ..`),
 `...` (`cd ../..`), and `....` (`cd ../../..`). The `ls`/`lt` defaults require
-`eza`; `cat` requires `bat`. No Oh My Zsh, fzf, or zoxide reinitialization occurs.
+`eza`; `cat` requires `bat`. When Yazi is installed, a `y` function launches it
+with the supplied arguments and changes to its last directory on quit, cleaning
+up its temporary cwd file. Existing `y` aliases/functions are preserved.
+No Oh My Zsh, fzf, or zoxide reinitialization occurs.
 
 ## GNOME preferences (separate, opt-in)
 
@@ -309,6 +316,6 @@ preview-only setup, bootstrap/config conflict preflights, missing Git-block
 command refusal/override/package-stage re-check with a filtered `PATH`,
 existing-checkout preservation and mock clone diagnostic privacy in a temporary
 home; package linking, bundled Alacritty theme/TOML validation; isolated tmux config loading;
-Herdr TOML validation and `herdr config check` against a temporary config home
+Yazi TOML/openers and `y` shell integration; Herdr TOML validation and `herdr config check` against a temporary config home
 when Herdr is installed; and GNOME schema/value checks
 when PyGObject is available. No test installs system packages or clones plugins.
