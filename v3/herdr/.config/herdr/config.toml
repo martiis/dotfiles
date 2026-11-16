@@ -23,6 +23,7 @@ rename_tab = ["prefix+comma", "prefix+shift+t"]
 reload_config = ["prefix+r", "prefix+shift+r"]
 resize_mode = "prefix+shift+e"
 workspace_picker = "prefix+o"
+goto = "prefix+s" # session navigator; tmux: choose-tree (prefix+g is lazygit below)
 open_notification_target = ""
 
 # Spaces mirror the tab layer with Shift added.
